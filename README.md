@@ -6,8 +6,6 @@
 
 <h1>BOWSER, DIY BITCOIN HARDWARE WALLET (BETA)</h1>
 
-<h2>Obviously use with caution.</h2>
-
 Building your own hardware wallet is a bit like building a lightsaber, only really necessary if you want to be a Jedi.
 
 Now building hardware wallets is easy with the help of <a href="https://github.com/micro-bitcoin/uBitcoin">uBitcoin</a> an Arduino library created by Stepan Snigrev.
