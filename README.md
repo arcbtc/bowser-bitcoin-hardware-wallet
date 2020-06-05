@@ -12,5 +12,5 @@ We understand the importance of building our own nodes, yet we don't give the sa
 
 Now building hardware wallets is easy with the help of <a href="https://github.com/micro-bitcoin/uBitcoin">uBitcoin</a> an Arduino library created by Stepan Snigrev.
 
-Building a hardware wallet is a great excuse to get a deeper understanding of bitcoin how bitcoin keys, seeds and signing works.
+Building hardware wallets not only gives greater autonomy/liberty, it is a great excuse to get a deeper understanding of bitcoin how bitcoin keys, seeds and signing works.
 
