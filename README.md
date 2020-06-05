@@ -6,7 +6,7 @@
 
 <h1>BOWSER, DIY BITCOIN HARDWARE WALLET (BETA)</h1>
 
-DIY hardwarew wallet hidden behind a decoy game. Obviosuely use with caution.
-We understand the importance of building our own nodes, yet we dont give the same emphasis to buidling hardware wallets?!
-I suppose building your own harware wallet is a bit like building a lihght saber, only really nessesary if you want to be a jedi. 
+DIY hardware wallet hidden behind a decoy game. Obviously use with caution.
+We understand the importance of building our own nodes, yet we don't give the same emphasis to building hardware wallets, why not?!
 
+I suppose building your own hardware wallet is a bit like building a lightsaber, only really necessary if you want to be a Jedi. 
