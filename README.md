@@ -6,7 +6,7 @@
 
 <h1>BOWSER, DIY BITCOIN HARDWARE WALLET (BETA)</h1>
 
-<h2>DIY hardware wallet hidden behind a decoy game. Obviously use with caution.</h2>
+<h2>Obviously use with caution.</h2>
 
 Building your own hardware wallet is a bit like building a lightsaber, only really necessary if you want to be a Jedi.
 
