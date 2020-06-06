@@ -216,7 +216,9 @@ void loop() {
         M5.Lcd.setCursor(0, 90);
         M5.Lcd.println("  Bwahahahaha!");
         M5.Lcd.println("");
-        M5.Lcd.println("  Transaction found");
+        M5.Lcd.println("  Transaction");
+        M5.Lcd.println("  found");
+      
         delay(3000);
         
         M5.Lcd.fillScreen(BLACK);
