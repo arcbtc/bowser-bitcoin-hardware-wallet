@@ -17,7 +17,7 @@ Building hardware wallets not only gives greater autonomy/liberty, it is a great
 Command to enter into bowser.txt on the SD card.
 
 Wipe device completely, setup new wallet:<br/>
-```HARD RESET WIPE DEVICE```
+```HARD RESET```
 
 Restore from a seed backup:<br/>
 ```RESTORE "husband behind shallow promote...."```
