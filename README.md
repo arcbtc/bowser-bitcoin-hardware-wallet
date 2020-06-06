@@ -37,7 +37,7 @@ https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_m
 - <a href="https://github.com/m5stack/M5Stack">M5Stack</a> (Download library from github and "Add Zip Library" in Arduino Library Manager) 
 
 ## Materials
-M5Stack (grey one is better) 
-SD card (not sure if size is an issue for larger SD, 16GB works fine) 
+- M5Stack (grey one is better) 
+- SD card (not sure if size is an issue for larger SD, 16GB works fine) 
 
 
