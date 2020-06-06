@@ -16,13 +16,13 @@ Building hardware wallets not only gives greater autonomy/liberty, it is a great
 
 Command to enter into bowser.txt on the SD card.
 
-Wipe device completely, setup new wallet:
+Wipe device completely, setup new wallet:<br/>
 ```HARD RESET WIPE DEVICE```
 
-Restore from a seed backup
+Restore from a seed backup:<br/>
 ```RESTORE "husband behind shallow promote...."```
     
-Sign an Electrum transaction
+Sign an Electrum transaction:<br/>
 ```SIGN "45505446ff00020000000001016cb...."```
 
 ## Installing Arduino
