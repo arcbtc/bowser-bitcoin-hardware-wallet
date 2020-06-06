@@ -20,10 +20,10 @@ Wipe device completely, setup new wallet:<br/>
 ```HARD RESET```
 
 Restore from a seed backup:<br/>
-```RESTORE "husband behind shallow promote...."```
+```RESTORE husband behind shallow promote....```
     
 Sign an Electrum transaction:<br/>
-```SIGN "45505446ff00020000000001016cb...."```
+```SIGN 45505446ff00020000000001016cb....```
 
 ## Installing Arduino
 Install Aruino IDE
