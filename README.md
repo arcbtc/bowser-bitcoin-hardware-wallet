@@ -14,7 +14,7 @@ Building hardware wallets not only gives greater autonomy/liberty, it is an exce
 
 ## SD COMMANDS
 
-Command to enter into bowser.txt on the SD card.
+Commands to enter into bowser.txt on the SD card.
 
 Wipe device completely, setup new wallet:<br/>
 ```HARD RESET```
@@ -35,5 +35,9 @@ https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_m
 ## Libraries Used
 - <a href="https://github.com/micro-bitcoin/uBitcoin">uBitcoin</a> (Install from "Library Manager" in Arduino)
 - <a href="https://github.com/m5stack/M5Stack">M5Stack</a> (Download library from github and "Add Zip Library" in Arduino Library Manager) 
+
+## Materials
+M5Stack (grey one is better) <img src="https://i.imgur.com/DtLQL62.jpg" />
+SD card (not sure if size is an issue for larger SD, 16GB works fine) <img src="https://i.imgur.com/X99B95R.jpg" />
 
 
