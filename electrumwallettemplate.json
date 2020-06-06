@@ -1,0 +1,14 @@
+{
+   "keystore":{
+      "ckcc_xpub":"lorem",
+      "xpub":"YOUR-ZPUB-FROM-BOWSER-EXPORT",
+      "label":"Bowser Wallet",
+      "ckcc_xfp":12345678,
+      "type":"hardware",
+      "hw_type":"coldcard",
+      "derivation":"m/84'/0'/0'"
+   },
+   "wallet_type":"standard",
+   "use_encryption":false,
+   "seed_version":17
+}
