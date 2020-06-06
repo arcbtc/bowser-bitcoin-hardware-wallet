@@ -36,9 +36,9 @@ char ref[2][26][5]={
 
 //========================================================================
 void setup(void) {
-  M5.begin();                   // M5STACK INITIALIZE
-  M5.Lcd.setBrightness(200);    // BRIGHTNESS = MAX 255
-  M5.Lcd.fillScreen(BLACK);     // CLEAR SCREEN
+  M5.begin();                   
+  M5.Lcd.setBrightness(100);    
+  M5.Lcd.fillScreen(BLACK);    
   decoysetup();
   M5.Lcd.setBrightness(100);
   M5.Lcd.drawBitmap(0, 0, 320, 240, (uint8_t *)WalletImg_map);
@@ -50,8 +50,10 @@ void setup(void) {
   File otherfile = SPIFFS.open("/key.txt");
   savedseed = otherfile.readStringUntil('\n');
   otherfile.close();
-  sdchecker(false);
-  if(sdcommand == "HARDRESET WIPE DEVICE" || savedseed == ""){
+  sdchecker();
+
+  if(sdcommand == "HARD RESET"){
+
     seedmaker();  
     pinmaker();
   }
@@ -82,7 +84,7 @@ void loop() {
       M5.Lcd.println("Display PubKey");
       M5.Lcd.setTextColor(GREEN);
       M5.Lcd.println("Sign Transaction");
-      M5.Lcd.println("Export XPUB");
+      M5.Lcd.println("Export ZPUB");
       M5.Lcd.println("Show Seed");
       M5.Lcd.println("Wipe Device");
       M5.Lcd.println("Restore From Seed");
@@ -92,7 +94,7 @@ void loop() {
       M5.Lcd.setTextColor(BLUE);
       M5.Lcd.println("Sign Transaction");
       M5.Lcd.setTextColor(GREEN);
-      M5.Lcd.println("Export XPUB");
+      M5.Lcd.println("Export ZPUB");
       M5.Lcd.println("Show Seed");
       M5.Lcd.println("Wipe Device");
       M5.Lcd.println("Restore From Seed");
@@ -101,7 +103,7 @@ void loop() {
       M5.Lcd.println("Display PubKey");
       M5.Lcd.println("Sign Transaction");
       M5.Lcd.setTextColor(BLUE);
-      M5.Lcd.println("Export XPUB");
+      M5.Lcd.println("Export ZPUB");
       M5.Lcd.setTextColor(GREEN);
       M5.Lcd.println("Show Seed");
       M5.Lcd.println("Wipe Device");
@@ -110,7 +112,7 @@ void loop() {
     else if (menuitem == 4) {
       M5.Lcd.println("Display PubKey");
       M5.Lcd.println("Sign Transaction");
-      M5.Lcd.println("Export XPUB");
+      M5.Lcd.println("Export ZPUB");
       M5.Lcd.setTextColor(BLUE);
       M5.Lcd.println("Show Seed");
       M5.Lcd.setTextColor(GREEN);
@@ -120,7 +122,7 @@ void loop() {
     else if (menuitem == 5) {
       M5.Lcd.println("Display PubKey");
       M5.Lcd.println("Sign Transaction");
-      M5.Lcd.println("Export XPUB");
+      M5.Lcd.println("Export ZPUB");
       M5.Lcd.println("Show Seed");
       M5.Lcd.setTextColor(BLUE);
       M5.Lcd.println("Wipe Device");
@@ -130,7 +132,7 @@ void loop() {
     else if (menuitem == 6) {
       M5.Lcd.println("Display PubKey");
       M5.Lcd.println("Sign Transaction");
-      M5.Lcd.println("Export XPUB");
+      M5.Lcd.println("Export ZPUB");
       M5.Lcd.println("Show Seed");
       M5.Lcd.println("Wipe Device");
       M5.Lcd.setTextColor(BLUE);
@@ -164,7 +166,15 @@ void loop() {
   //DISPLAY PUBKEY: Menu item 1 selected
   if(menuitem == 1){ 
     HDPublicKey hd(pubkey);
-    int pubnum = readIntFromEEPROM(21) + 1;
+    
+    File otherfile = SPIFFS.open("/num.txt");
+    String pubnumm = otherfile.readStringUntil('\n');
+    otherfile.close();
+    int pubnum = pubnumm.toInt() + 1;
+    File file = SPIFFS.open("/num.txt", FILE_WRITE);
+    file.print(pubnum);
+    file.close();
+    
     String path = String("m/0/")+pubnum;
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setCursor(0, 20);
@@ -181,7 +191,8 @@ void loop() {
     }
     M5.Lcd.setCursor(0, 220);
     M5.Lcd.println(" Saved to SD, C for menu");
-    writeIntIntoEEPROM(21, pubnum);
+
+    
     while (buttonc == false){
       if (M5.BtnC.wasReleased()){buttonc = true;}
        M5.update(); 
@@ -191,7 +202,7 @@ void loop() {
   
   //SIGN TRANSACTION: Menu item 2 selected
   else if(menuitem == 2){
-    sdchecker(false);
+    sdchecker();
     if (sdcommand.substring(0, 4) == "SIGN"){
         String psbttx = sdcommand.substring(5, sdcommand.length() + 1);
  
@@ -369,7 +380,7 @@ void loop() {
    
   else if(menuitem == 6){
     if(sdcommand.substring(0,7) == "RESTORE"){
-    // sdchecker(false);
+    // sdchecker();
      restorefromseed(sdcommand.substring(8,sdcommand.length()));
     }
     else{
@@ -433,13 +444,9 @@ void seedmaker(){
   
   for (int z = 0; z < 24; z++){
     seedgeneratestr += seedwords[random(0,2047)] + " ";
-    seedgeneratesarr[z] = seedwords[random(0,2047)];
+
   }
   
-  File file = SPIFFS.open("/key.txt", FILE_WRITE);
-  file.print(seedgeneratestr.substring(0, seedgeneratestr.length() - 1) + "\n");
-  file.close();
-
   for (int z = 0; z < 24; z++){
       M5.Lcd.fillScreen(BLACK);
       M5.Lcd.setCursor(0, 70);
@@ -448,7 +455,7 @@ void seedmaker(){
       M5.Lcd.println("");
       M5.Lcd.setTextSize(5);
       M5.Lcd.setTextColor(BLUE);
-      M5.Lcd.println("  " + seedgeneratesarr[z]);
+      M5.Lcd.println("  " + getValue(seedgeneratestr,' ',z));
       M5.Lcd.setTextSize(2);
       M5.Lcd.println("");
       M5.Lcd.setTextColor(GREEN);
@@ -475,7 +482,7 @@ void seedmaker(){
       M5.Lcd.println("");
       M5.Lcd.setTextSize(5);
       M5.Lcd.setTextColor(BLUE);
-      M5.Lcd.println("  " + seedgeneratesarr[z]);
+      M5.Lcd.println("  " + getValue(seedgeneratestr,' ',z));
       M5.Lcd.setTextSize(2);
       M5.Lcd.println("");
       M5.Lcd.setTextColor(GREEN);
@@ -492,12 +499,18 @@ void seedmaker(){
   M5.Lcd.println("   Words will also");
   M5.Lcd.println("   be saved to SD");
 
-
-  seedgeneratestr = "Keep you seed phrase safe but dont lose them! \n" + seedgeneratestr + "\n To learn more about seed phrases visit https://en.bitcoin.it/wiki/Seed_phrase";
-  int str_len = seedgeneratestr.length() + 1; 
+  File file = SPIFFS.open("/key.txt", FILE_WRITE);
+  file.print(seedgeneratestr.substring(0, seedgeneratestr.length() - 1) + "\n");
+  file.close();
+  
+  String seedgen = "Keep you seed phrase safe but dont lose them! \n" + seedgeneratestr + "\n To learn more about seed phrases visit https://en.bitcoin.it/wiki/Seed_phrase";
+  int str_len = seedgen.length() + 1; 
   char char_array[str_len];
-  seedgeneratestr.toCharArray(char_array, str_len);
+  seedgen.toCharArray(char_array, str_len);
 
+  File otherfile = SPIFFS.open("/key.txt");
+  savedseed = otherfile.readStringUntil('\n');
+  otherfile.close();
 
   writeFile(SD, "/bowser.txt", char_array);
   
@@ -642,13 +655,8 @@ void restorefromseed(String theseed){
 }
 
 //========================================================================
-void sdchecker(bool PSbT){
-  if(PSbT == false){
+void sdchecker(){
   readFile(SD, "/bowser.txt");
-  }
-  else if(PSbT == true){
-  readFile(SD, "/bowser.psbt");
-  }
 
 }
 
@@ -686,8 +694,6 @@ void getKeys(String mnemonic, String password)
   privatekey = account;
   
    pubkey = account.xpub();
- // pubkeyy.type = P2SH_P2WSH;
- // pubkey = pubkeyy;
  
  
 }
@@ -696,25 +702,16 @@ void getKeys(String mnemonic, String password)
 void readFile(fs::FS &fs, const char * path) {
     File file = fs.open(path);
     if(!file){
-        M5.Lcd.println("   Failed to open file for reading");
+        Serial.println("   Failed to open file for reading");
         return;
     }
-    if (path == "/bowser.txt"){
       while(file.available()){
           sdcommand = file.readStringUntil('\n');
       }
-    }
-    else if (path == "/bowser.psbt"){
-      String  sdcommandd;
-      while(file.available()){
-            char poo[100];
-            Serial.print(file.readBytes(poo, 100), HEX);
-            Serial.println("poo");
-          }
-        
-      }
-    
+
 }
+
+
 
 //========================================================================
 void writeFile(fs::FS &fs, const char * path, const char * message){
@@ -736,10 +733,9 @@ void writeFile(fs::FS &fs, const char * path, const char * message){
 //========================================================================
 void writeIntIntoEEPROM(int addresss, int number)
 { 
-  EEPROM.write(addresss, number >> 8);
-  EEPROM.write(addresss + 1, number & 0xFF);
+  EEPROM.write(addresss, number);
 }
 int readIntFromEEPROM(int addresss)
 {
-  return (EEPROM.read(addresss) << 8) + EEPROM.read(addresss + 1);
+  return EEPROM.read(addresss);
 }
