@@ -36,9 +36,8 @@ Install ESP32 Boards
 https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md
 
 ## Libraries Used
-- <a href="https://github.com/micro-bitcoin/uBitcoin">uBitcoin</a> (Install from "Library Manager" in Arduino)
-- <a href="https://github.com/m5stack/M5Stack">M5Stack</a> (Download library from github and "Add Zip Library" in Arduino Library Manager) 
-
+- <a href="https://github.com/micro-bitcoin/uBitcoin">uBitcoin</a> (Download library from github and "Add Zip Library" in Arduino Library Manager) 
+- <a href="https://github.com/m5stack/M5Stack">M5Stack</a> (Install from "Library Manager" in Arduino)
 ## Materials
 - M5Stack (grey one is better) 
 - SD card (not sure if size is an issue for larger SD, 16GB works fine) 
