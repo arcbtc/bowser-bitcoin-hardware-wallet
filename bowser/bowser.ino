@@ -204,8 +204,8 @@ void loop() {
   else if(menuitem == 2){
     sdchecker();
     if (sdcommand.substring(0, 4) == "SIGN"){
-        String psbttx = sdcommand.substring(5, sdcommand.length() + 1);
- 
+        String eltx = sdcommand.substring(5, sdcommand.length() + 1);
+  
         ElectrumTx tx;
         
         M5.Lcd.fillScreen(BLACK);
@@ -224,14 +224,22 @@ void loop() {
         M5.Lcd.fillScreen(BLACK);
         M5.Lcd.setCursor(0, 20);
         M5.Lcd.setTextSize(2);
-
-        int len_parsed = tx.parse(psbttx);
+  
+        int len_parsed = tx.parse(eltx);
         if(len_parsed == 0){
           M5.Lcd.println("Can't parse tx");
           return;
         }
-        M5.Lcd.println("Unsigned tx");
-        M5.Lcd.println(tx);
+        for(int i=0; i<tx.tx.outputsNumber; i++){
+          M5.Lcd.print(tx.tx.txOuts[i].address());
+          M5.Lcd.print("\n-> ");
+          // Serial can't print uint64_t, so convert to int
+          M5.Lcd.print(int(tx.tx.txOuts[i].amount));
+          M5.Lcd.println(" sat\n");
+        }
+        M5.Lcd.print("Fee: ");
+        M5.Lcd.print(int(tx.fee()));
+        M5.Lcd.println(" sat");
 
        M5.Lcd.setCursor(0, 220);
        M5.Lcd.println("A to sign, C to cancel");
