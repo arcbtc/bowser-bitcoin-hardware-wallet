@@ -160,7 +160,7 @@ void decoysetup(){
   M5.Lcd.drawBitmap(0, 0, 320, 240, (uint8_t *)GameImg_map);
   
   int starttime = millis();
-  while (millis() - starttime < 1000){
+  while (millis() - starttime < 500){
     if (M5.BtnC.wasReleased()){decoy = false; M5.Lcd.fillScreen(BLACK);}
     M5.update(); 
   }
