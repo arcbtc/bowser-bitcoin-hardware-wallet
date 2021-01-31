@@ -28,6 +28,9 @@ Restore from a seed backup:<br/>
 Sign an Electrum transaction:<br/>
 ```SIGN 45505446ff00020000000001016cb....```
 
+## Morse-code cheat sheet 
+<img src="https://i.imgur.com/atlxPn1.png">
+
 ## Installing Arduino
 Install Aruino IDE
 https://www.arduino.cc/en/Guide/HomePage
