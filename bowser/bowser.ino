@@ -40,6 +40,8 @@ void setup(void)
 {
   Serial.begin(115200);
   M5.begin();
+  //Get randomness from hardware noise
+  randomSeed(esp_random());
   M5.Lcd.setBrightness(100);
   M5.Lcd.fillScreen(BLACK);
   decoySetup();
@@ -53,7 +55,7 @@ void setup(void)
   savedSeed = otherFile.readStringUntil('\n');
   otherFile.close();
   sdChecker();
-  if (!sdAvailable && savedSeed.length() < 10)
+  if (!sdAvailable && savedSeed.length() < 30)
   {
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setCursor(0, 100);
@@ -75,7 +77,7 @@ void setup(void)
     restoreFromSeed(sdCommand.substring(8, sdCommand.length()));
     pinMaker();
   }
-  else if (savedSeed.length() > 10)
+  else if (savedSeed.length() > 30)
   {
     enterPin(false);
   }
@@ -93,9 +95,9 @@ void setup(void)
 
 //========================================================================
 void loop()
-{
+{ 
+  M5.update();
   loopMenu = true;
-  //Run menu loop
   while (loopMenu == true)
   {
     M5.Lcd.fillScreen(BLACK);
@@ -175,7 +177,6 @@ void loop()
       M5.update();
     }
     buttonA = false;
-
     if (menuItem < 1)
     {
       menuItem = 5;
@@ -186,31 +187,22 @@ void loop()
     }
   }
 
-  //DISPLAY ADDRESS: Menu item 1 selected
   if (menuItem == 1)
   {
     displayAddress();
   }
-
-  //SIGN TRANSACTION: Menu item 2 selected
   else if (menuItem == 2)
   {
     signPSBT();
   }
-
-  //EXPORT Master Pub: Menu item 3 selected
   else if (menuItem == 3)
   {
     exportMaster();
   }
-
-  //SHOW SEED: Menu item 4 selected
   else if (menuItem == 4)
   {
     showSeed();
   }
-
-  //WIPE DEVICE: Menu item 5 selected
   else if (menuItem == 5)
   {
     wipeDevice();
@@ -219,21 +211,47 @@ void loop()
 
 //========================================================================
 
-void showSeed()
+void displayAddress()
 {
+    sdChecker();
+    HDPublicKey hd(pubKey);
+
+    File otherFile = SPIFFS.open("/num.txt");
+    String pubNumm = otherFile.readStringUntil('\n');
+    otherFile.close();
+    int pubNum = pubNumm.toInt() + 1;
+    File file = SPIFFS.open("/num.txt", FILE_WRITE);
+    file.print(pubNum);
+    file.close();
+
+    String path = String("m/0/") + pubNum;
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setCursor(0, 20);
     M5.Lcd.setTextSize(3);
     M5.Lcd.setTextColor(GREEN);
-    M5.Lcd.println("    SHOW SEED");
-    M5.Lcd.println("");
-    M5.Lcd.setTextColor(BLUE);
+    M5.Lcd.println("      ADDRESS");
+    String freshPub = hd.derive(path).address();
+    M5.Lcd.qrcode(freshPub, 5, 46, 160);
     M5.Lcd.setTextSize(2);
-    M5.Lcd.println(savedSeed);
-    M5.Lcd.setTextColor(GREEN);
-    M5.Lcd.setTextSize(2);
-    M5.Lcd.setCursor(0, 220);
-    M5.Lcd.println("     Press C for menu");
+    int i = 0;
+    while (i < freshPub.length() + 1)
+    {
+      M5.Lcd.println("              " + freshPub.substring(i, i + 12));
+      i = i + 12;
+    }
+    sdChecker();
+    if (sdAvailable)
+    {
+      writeFile(SD, "/bowser.txt", freshPub.c_str());
+      M5.Lcd.setCursor(0, 220);
+      M5.Lcd.println(" Saved to SD, C for menu");
+    }
+    else
+    {
+      M5.Lcd.setCursor(0, 220);
+      M5.Lcd.println(" No SD, C for menu");
+    }
+
     while (buttonC == false)
     {
       if (M5.BtnC.wasReleased())
@@ -245,96 +263,6 @@ void showSeed()
     buttonC = false;
 }
 
-//========================================================================
-
-void wipeDevice()
-{
-  M5.Lcd.fillScreen(BLACK);
-  M5.Lcd.setCursor(0, 20);
-  M5.Lcd.setTextSize(3);
-  M5.Lcd.setTextColor(GREEN); 
-  M5.Lcd.println("RESET/WIPE DEVICE");
-  M5.Lcd.setCursor(0, 90);
-  M5.Lcd.setTextColor(RED);
-  M5.Lcd.setTextSize(2);
-  M5.Lcd.println("Device will be reset,");
-  M5.Lcd.println("are you sure?");
-  M5.Lcd.setTextSize(2);
-  M5.Lcd.setCursor(0, 220);
-  M5.Lcd.println("A to continue, C to cancel");
-
-  while (buttonA == false && buttonC == false)
-  {
-    if (M5.BtnA.wasReleased())
-    {
-      buttonA = true;
-      }
-      if (M5.BtnC.wasReleased())
-      {
-        buttonC = true;
-      }
-      M5.update();
-    }
-    if (buttonA == true)
-    {
-      wipeSpiffs();
-      seedMaker();
-      pinMaker();
-    }
-
-    buttonA = false;
-    buttonC = false;
-}
-//========================================================================
-
-void exportMaster()
-{
-    sdChecker();
-    if (sdAvailable)
-    {
-      int str_len = pubKey.length() + 1;
-      char char_array[str_len];
-      pubKey.toCharArray(char_array, str_len);
-      writeFile(SD, "/bowser.txt", char_array);
-      M5.Lcd.fillScreen(BLACK);
-      M5.Lcd.setCursor(0, 20);
-      M5.Lcd.setTextSize(3);
-      M5.Lcd.println("   EXPORT ZPUB");
-      M5.Lcd.qrcode(pubKey, 5, 46, 160);
-      M5.Lcd.setTextSize(2);
-      int i = 0;
-      while (i < pubKey.length() + 1)
-      {
-        M5.Lcd.println("              " + pubKey.substring(i, i + 12));
-        i = i + 12;
-      }
-      M5.Lcd.setTextSize(2);
-      M5.Lcd.setCursor(0, 220);
-      M5.Lcd.println(" Saved to SD, C for menu");
-      while (buttonC == false)
-      {
-        if (M5.BtnC.wasReleased())
-        {
-          buttonC = true;
-        }
-        M5.update();
-      }
-      buttonC = false;
-      sdCommand = "";
-    }
-    else
-    {
-      M5.Lcd.fillScreen(BLACK);
-      M5.Lcd.setCursor(0, 100);
-      M5.Lcd.setTextSize(2);
-      M5.Lcd.setTextColor(RED);
-      M5.Lcd.println("    No SD Available");
-      M5.Lcd.setTextColor(GREEN);
-      M5.Lcd.setTextSize(2);
-      M5.Lcd.setCursor(0, 220);
-      M5.Lcd.println("    Press C for menu");
-    }  
-}
 //========================================================================
 
 void signPSBT()
@@ -452,49 +380,75 @@ void signPSBT()
       buttonC = false;
     }
 }
+
 //========================================================================
 
-void displayAddress()
+void exportMaster()
 {
-    sdChecker();
-    HDPublicKey hd(pubKey);
+  sdChecker();
+  if (sdAvailable)
+  {
+    int str_len = pubKey.length() + 1;
+    char char_array[str_len];
+    pubKey.toCharArray(char_array, str_len);
+    writeFile(SD, "/bowser.txt", char_array);
+    M5.Lcd.fillScreen(BLACK);
+    M5.Lcd.setCursor(0, 20);
+    M5.Lcd.setTextSize(3);
+    M5.Lcd.println("   EXPORT ZPUB");
+    M5.Lcd.qrcode(pubKey, 5, 46, 160);
+    M5.Lcd.setTextSize(2);
+    int i = 0;
+    while (i < pubKey.length() + 1)
+    {
+      M5.Lcd.println("              " + pubKey.substring(i, i + 12));
+      i = i + 12;
+    }
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.setCursor(0, 220);
+    M5.Lcd.println(" Saved to SD, C for menu");
+    while (buttonC == false)
+    {
+      if (M5.BtnC.wasReleased())
+      {
+        buttonC = true;
+      }
+      M5.update();
+    }
+    buttonC = false;
+    sdCommand = "";
+    }
+  else
+  {
+    M5.Lcd.fillScreen(BLACK);
+    M5.Lcd.setCursor(0, 100);
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.setTextColor(RED);
+    M5.Lcd.println("    No SD Available");
+    M5.Lcd.setTextColor(GREEN);
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.setCursor(0, 220);
+    M5.Lcd.println("    Press C for menu");
+  }  
+}
 
-    File otherFile = SPIFFS.open("/num.txt");
-    String pubNumm = otherFile.readStringUntil('\n');
-    otherFile.close();
-    int pubNum = pubNumm.toInt() + 1;
-    File file = SPIFFS.open("/num.txt", FILE_WRITE);
-    file.print(pubNum);
-    file.close();
+//========================================================================
 
-    String path = String("m/0/") + pubNum;
+void showSeed()
+{
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setCursor(0, 20);
     M5.Lcd.setTextSize(3);
     M5.Lcd.setTextColor(GREEN);
-    M5.Lcd.println("      ADDRESS");
-    String freshPub = hd.derive(path).address();
-    M5.Lcd.qrcode(freshPub, 5, 46, 160);
+    M5.Lcd.println("    SHOW SEED");
+    M5.Lcd.println("");
+    M5.Lcd.setTextColor(BLUE);
     M5.Lcd.setTextSize(2);
-    int i = 0;
-    while (i < freshPub.length() + 1)
-    {
-      M5.Lcd.println("              " + freshPub.substring(i, i + 12));
-      i = i + 12;
-    }
-    sdChecker();
-    if (sdAvailable)
-    {
-      writeFile(SD, "/bowser.txt", freshPub.c_str());
-      M5.Lcd.setCursor(0, 220);
-      M5.Lcd.println(" Saved to SD, C for menu");
-    }
-    else
-    {
-      M5.Lcd.setCursor(0, 220);
-      M5.Lcd.println(" No SD, C for menu");
-    }
-
+    M5.Lcd.println(savedSeed);
+    M5.Lcd.setTextColor(GREEN);
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.setCursor(0, 220);
+    M5.Lcd.println("     Press C for menu");
     while (buttonC == false)
     {
       if (M5.BtnC.wasReleased())
@@ -505,7 +459,50 @@ void displayAddress()
     }
     buttonC = false;
 }
+
 //========================================================================
+
+void wipeDevice()
+{
+  M5.Lcd.fillScreen(BLACK);
+  M5.Lcd.setCursor(0, 20);
+  M5.Lcd.setTextSize(3);
+  M5.Lcd.setTextColor(GREEN); 
+  M5.Lcd.println("RESET/WIPE DEVICE");
+  M5.Lcd.setCursor(0, 90);
+  M5.Lcd.setTextColor(RED);
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.println("Device will be reset,");
+  M5.Lcd.println("are you sure?");
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.setCursor(0, 220);
+  M5.Lcd.println("A to continue, C to cancel");
+
+  while (buttonA == false && buttonC == false)
+  {
+    if (M5.BtnA.wasReleased())
+    {
+      buttonA = true;
+      }
+      if (M5.BtnC.wasReleased())
+      {
+        buttonC = true;
+      }
+      M5.update();
+    }
+    if (buttonA == true)
+    {
+      wipeSpiffs();
+      seedMaker();
+      pinMaker();
+    }
+
+    buttonA = false;
+    buttonC = false;
+}
+
+//========================================================================
+
 void seedChecker()
 {
   File otherFile = SPIFFS.open("/key.txt");
@@ -553,11 +550,60 @@ void seedMaker()
   delay(6000);
   buttonA = false;
 
-  for (int z = 0; z < 24; z++)
+  String bigNum;
+  //Get first 23 words
+  for (int z = 0; z < 23; z++)
   {
-    seedGenerateStr += seedWords[random(0, 2047)] + " ";
+    int randomNumber = random(0, 2047);
+    Serial.println(randomNumber);
+    bigNum = bigNum + decimalToBinary(randomNumber);
+    seedGenerateStr += seedWords[randomNumber] + " ";
   }
-
+  //Calculate the last word
+  String checkSum = String(random(0, 1)) + String(random(0, 1)) + String(random(0, 1));
+  bigNum = bigNum + checkSum;
+  uint8_t newBigNumResult[64];
+  sha256(String(bigNum.toInt()), newBigNumResult);
+  String hashedNum = toHex(newBigNumResult, 64);
+  Serial.println(bigNum);
+  Serial.println(hashedNum);
+  Serial.println(hashedNum[0]);
+  Serial.println(hashedNum[1]);
+  String binNum;
+  for (int i = 0; i <= 1; i++) {
+    int tempNum;
+    if(hashedNum[i] == 'a'){
+      tempNum = 10;
+    }
+    else if(hashedNum[i] == 'b'){
+      tempNum = 11;
+    }
+    else if(hashedNum[i] == 'c'){
+      tempNum = 12;
+    }
+    else if(hashedNum[i] == 'd'){
+      tempNum = 13;
+    }
+    else if(hashedNum[i] == 'e'){
+      tempNum = 14;
+    }
+    else if(hashedNum[i] == 'f'){
+      tempNum = 15;
+    }
+    else{
+      tempNum = String(hashedNum[i]).toInt();
+    }
+    Serial.println("dfgvasdf");
+    Serial.println(tempNum);
+    Serial.println("dasfgsdfg");
+    binNum = String(binNum) + String(decimalToBinary(tempNum));
+    
+  }
+  Serial.println(binNum);
+  Serial.println(binaryToDecimal(binNum.toInt()));
+  Serial.println(seedWords[binaryToDecimal(binNum.toInt())]);
+  seedGenerateStr += seedWords[binaryToDecimal(binNum.toInt())];
+  
   for (int z = 0; z < 24; z++)
   {
     M5.Lcd.fillScreen(BLACK);
@@ -631,13 +677,39 @@ void seedMaker()
   File otherFile = SPIFFS.open("/key.txt");
   savedSeed = otherFile.readStringUntil('\n');
   otherFile.close();
-
+  
   writeFile(SD, "/bowser.txt", char_array);
 
   delay(6000);
 }
 
 //========================================================================
+
+String decimalToBinary(int num)
+{
+  uint8_t bitsCount = sizeof( num ) * 8;
+  char str[ bitsCount + 1 ];
+  itoa( num, str, 2 );
+
+  return str;
+}
+
+int binaryToDecimal(int num)
+{
+    int dec_value = 0;
+    int base = 1;
+    int temp = num;
+    while (temp) {
+        int last_digit = temp % 10;
+        temp = temp / 10;
+        dec_value += last_digit * base;
+        base = base * 2;
+    }
+    return dec_value;
+}
+
+//========================================================================
+
 void pinMaker()
 {
   M5.Lcd.fillScreen(BLACK);
@@ -651,6 +723,7 @@ void pinMaker()
 }
 
 //========================================================================
+
 void enterPin(bool set)
 {
   passKey = "";
@@ -796,6 +869,9 @@ void restoreFromSeed(String theSeed)
     File file = SPIFFS.open("/key.txt", FILE_WRITE);
     file.print(theSeed + "\n");
     file.close();
+    File otherFile = SPIFFS.open("/key.txt");
+    savedSeed = otherFile.readStringUntil('\n');
+    otherFile.close();
     writeFile(SD, "/bowser.txt", "");
   }
 
@@ -804,6 +880,7 @@ void restoreFromSeed(String theSeed)
 }
 
 //========================================================================
+
 void wipeSpiffs()
 {
   File fileKey = SPIFFS.open("/key.txt", FILE_WRITE);
@@ -818,12 +895,14 @@ void wipeSpiffs()
 }
 
 //========================================================================
+
 void sdChecker()
 {
   readFile(SD, "/bowser.txt");
 }
 
 //========================================================================
+
 String getValue(String data, char separator, int index)
 {
   int found = 0;
@@ -844,6 +923,7 @@ String getValue(String data, char separator, int index)
 }
 
 //========================================================================
+
 void getKeys(String mnemonic, String password)
 {
 
@@ -863,6 +943,7 @@ void getKeys(String mnemonic, String password)
 }
 
 //========================================================================
+
 void readFile(fs::FS &fs, const char *path)
 {
   File file = fs.open(path);
@@ -880,6 +961,7 @@ void readFile(fs::FS &fs, const char *path)
 }
 
 //========================================================================
+
 void writeFile(fs::FS &fs, const char *path, const char *message)
 {
 
@@ -900,6 +982,7 @@ void writeFile(fs::FS &fs, const char *path, const char *message)
 }
 
 //========================================================================
+
 void writeIntIntoEEPROM(int addresss, int number)
 {
   EEPROM.write(addresss, number);
