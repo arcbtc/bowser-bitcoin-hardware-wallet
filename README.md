@@ -10,6 +10,8 @@ Now building hardware wallets is easy with the help of <a href="https://github.c
 
 Building hardware wallets not only gives greater autonomy/liberty, it is an excellent excuse to get a deeper understanding of how bitcoin keys, seeds and signing works.
 
+For use with Electrum Wallet 3.3.8 https://download.electrum.org/3.3.8/ 
+
 ## Disclaimer
 
 Project is out of beta and ready for use, but use at your own risk.
