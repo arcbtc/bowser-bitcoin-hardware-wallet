@@ -81,7 +81,8 @@ void setup(void)
   {
     enterPin(false);
   }
-  else{
+  else
+  {
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setCursor(0, 100);
     M5.Lcd.setTextSize(2);
@@ -95,7 +96,7 @@ void setup(void)
 
 //========================================================================
 void loop()
-{ 
+{
   M5.update();
   loopMenu = true;
   while (loopMenu == true)
@@ -213,45 +214,128 @@ void loop()
 
 void displayAddress()
 {
-    sdChecker();
-    HDPublicKey hd(pubKey);
+  sdChecker();
+  HDPublicKey hd(pubKey);
 
-    File otherFile = SPIFFS.open("/num.txt");
-    String pubNumm = otherFile.readStringUntil('\n');
-    otherFile.close();
-    int pubNum = pubNumm.toInt() + 1;
-    File file = SPIFFS.open("/num.txt", FILE_WRITE);
-    file.print(pubNum);
-    file.close();
+  File otherFile = SPIFFS.open("/num.txt");
+  String pubNumm = otherFile.readStringUntil('\n');
+  otherFile.close();
+  int pubNum = pubNumm.toInt() + 1;
+  File file = SPIFFS.open("/num.txt", FILE_WRITE);
+  file.print(pubNum);
+  file.close();
 
-    String path = String("m/0/") + pubNum;
+  String path = String("m/0/") + pubNum;
+  M5.Lcd.fillScreen(BLACK);
+  M5.Lcd.setCursor(0, 20);
+  M5.Lcd.setTextSize(3);
+  M5.Lcd.setTextColor(GREEN);
+  M5.Lcd.println("      ADDRESS");
+  String freshPub = hd.derive(path).address();
+  M5.Lcd.qrcode(freshPub, 5, 46, 160);
+  M5.Lcd.setTextSize(2);
+  int i = 0;
+  while (i < freshPub.length() + 1)
+  {
+    M5.Lcd.println("              " + freshPub.substring(i, i + 12));
+    i = i + 12;
+  }
+  sdChecker();
+  if (sdAvailable)
+  {
+    writeFile(SD, "/bowser.txt", freshPub.c_str());
+    M5.Lcd.setCursor(0, 220);
+    M5.Lcd.println(" Saved to SD, C for menu");
+  }
+  else
+  {
+    M5.Lcd.setCursor(0, 220);
+    M5.Lcd.println(" No SD, C for menu");
+  }
+
+  while (buttonC == false)
+  {
+    if (M5.BtnC.wasReleased())
+    {
+      buttonC = true;
+    }
+    M5.update();
+  }
+  buttonC = false;
+}
+
+//========================================================================
+
+void signPSBT()
+{
+  sdChecker();
+  if (sdCommand.substring(0, 4) == "SIGN")
+  {
+    String eltx = sdCommand.substring(5, sdCommand.length() + 1);
+    ElectrumTx tx;
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setCursor(0, 20);
     M5.Lcd.setTextSize(3);
     M5.Lcd.setTextColor(GREEN);
-    M5.Lcd.println("      ADDRESS");
-    String freshPub = hd.derive(path).address();
-    M5.Lcd.qrcode(freshPub, 5, 46, 160);
+    M5.Lcd.println("");
+    M5.Lcd.setCursor(0, 90);
+    M5.Lcd.println("  Bwahahahaha!");
+    M5.Lcd.println("");
+    M5.Lcd.println("  Transaction");
+    M5.Lcd.println("  found");
+    delay(3000);
+    M5.Lcd.fillScreen(BLACK);
+    M5.Lcd.setCursor(0, 20);
     M5.Lcd.setTextSize(2);
-    int i = 0;
-    while (i < freshPub.length() + 1)
+    int len_parsed = tx.parse(eltx);
+    if (len_parsed == 0)
     {
-      M5.Lcd.println("              " + freshPub.substring(i, i + 12));
-      i = i + 12;
+      M5.Lcd.println("Can't parse tx");
+      return;
     }
-    sdChecker();
-    if (sdAvailable)
+    M5.Lcd.println("Unsigned tx");
+    M5.Lcd.println(tx);
+    M5.Lcd.setCursor(0, 220);
+    M5.Lcd.println("A to sign, C to cancel");
+    while (buttonA == false && buttonC == false)
     {
-      writeFile(SD, "/bowser.txt", freshPub.c_str());
-      M5.Lcd.setCursor(0, 220);
-      M5.Lcd.println(" Saved to SD, C for menu");
+      if (M5.BtnA.wasReleased())
+      {
+        buttonA = true;
+      }
+      if (M5.BtnC.wasReleased())
+      {
+        buttonC = true;
+      }
+      M5.update();
     }
-    else
+    if (buttonC == true)
     {
-      M5.Lcd.setCursor(0, 220);
-      M5.Lcd.println(" No SD, C for menu");
+      buttonC = false;
+      return;
     }
-
+    buttonA = false;
+    HDPrivateKey hd(savedSeed, passKey);
+    HDPrivateKey account = hd.derive("m/84'/0'/0'/");
+    Serial.println(account);
+    tx.sign(account);
+    M5.Lcd.fillScreen(BLACK);
+    M5.Lcd.setCursor(0, 20);
+    M5.Lcd.setTextSize(2);
+    String signedTx = tx;
+    Serial.print(signedTx);
+    int str_len = signedTx.length() + 1;
+    char char_array[str_len];
+    signedTx.toCharArray(char_array, str_len);
+    writeFile(SD, "/bowser.txt", char_array);
+    M5.Lcd.fillScreen(BLACK);
+    M5.Lcd.setCursor(0, 100);
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.println("    Saved to SD");
+    M5.Lcd.println("");
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.setCursor(0, 220);
+    M5.Lcd.println("    Press C for menu");
     while (buttonC == false)
     {
       if (M5.BtnC.wasReleased())
@@ -261,124 +345,41 @@ void displayAddress()
       M5.update();
     }
     buttonC = false;
-}
-
-//========================================================================
-
-void signPSBT()
-{
-    sdChecker();
-    if (sdCommand.substring(0, 4) == "SIGN")
+    sdCommand = "";
+  }
+  else if (sdAvailable)
+  {
+    M5.Lcd.fillScreen(BLACK);
+    M5.Lcd.setCursor(0, 100);
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.setTextColor(RED);
+    M5.Lcd.println("    No SD Available");
+    M5.Lcd.setTextColor(GREEN);
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.setCursor(0, 220);
+    M5.Lcd.println("    Press C for menu");
+  }
+  else
+  {
+    M5.Lcd.fillScreen(BLACK);
+    M5.Lcd.setCursor(0, 100);
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.setTextColor(RED);
+    M5.Lcd.println("    Not found on SD");
+    M5.Lcd.setTextColor(GREEN);
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.setCursor(0, 220);
+    M5.Lcd.println("    Press C for menu");
+    while (buttonC == false)
     {
-      String eltx = sdCommand.substring(5, sdCommand.length() + 1);
-      ElectrumTx tx;
-      M5.Lcd.fillScreen(BLACK);
-      M5.Lcd.setCursor(0, 20);
-      M5.Lcd.setTextSize(3);
-      M5.Lcd.setTextColor(GREEN);
-      M5.Lcd.println("");
-      M5.Lcd.setCursor(0, 90);
-      M5.Lcd.println("  Bwahahahaha!");
-      M5.Lcd.println("");
-      M5.Lcd.println("  Transaction");
-      M5.Lcd.println("  found");
-      delay(3000);
-      M5.Lcd.fillScreen(BLACK);
-      M5.Lcd.setCursor(0, 20);
-      M5.Lcd.setTextSize(2);
-      int len_parsed = tx.parse(eltx);
-      if (len_parsed == 0)
+      if (M5.BtnC.wasReleased())
       {
-        M5.Lcd.println("Can't parse tx");
-        return;
+        buttonC = true;
       }
-      M5.Lcd.println("Unsigned tx");
-      M5.Lcd.println(tx);
-      M5.Lcd.setCursor(0, 220);
-      M5.Lcd.println("A to sign, C to cancel");
-      while (buttonA == false && buttonC == false)
-      {
-        if (M5.BtnA.wasReleased())
-        {
-          buttonA = true;
-        }
-        if (M5.BtnC.wasReleased())
-        {
-          buttonC = true;
-        }
-        M5.update();
-      }
-      if (buttonC == true)
-      {
-        buttonC = false;
-        return;
-      }
-      buttonA = false;
-      HDPrivateKey hd(savedSeed, passKey);
-      HDPrivateKey account = hd.derive("m/84'/0'/0'/");
-      Serial.println(account);
-      tx.sign(account);
-      M5.Lcd.fillScreen(BLACK);
-      M5.Lcd.setCursor(0, 20);
-      M5.Lcd.setTextSize(2);
-      String signedTx = tx;
-      Serial.print(signedTx);
-      int str_len = signedTx.length() + 1;
-      char char_array[str_len];
-      signedTx.toCharArray(char_array, str_len);
-      writeFile(SD, "/bowser.txt", char_array);
-      M5.Lcd.fillScreen(BLACK);
-      M5.Lcd.setCursor(0, 100);
-      M5.Lcd.setTextSize(2);
-      M5.Lcd.println("    Saved to SD");
-      M5.Lcd.println("");
-      M5.Lcd.setTextSize(2);
-      M5.Lcd.setCursor(0, 220);
-      M5.Lcd.println("    Press C for menu");
-      while (buttonC == false)
-      {
-        if (M5.BtnC.wasReleased())
-        {
-          buttonC = true;
-        }
-        M5.update();
-      }
-      buttonC = false;
-      sdCommand = "";
+      M5.update();
     }
-    else if (sdAvailable)
-    {
-      M5.Lcd.fillScreen(BLACK);
-      M5.Lcd.setCursor(0, 100);
-      M5.Lcd.setTextSize(2);
-      M5.Lcd.setTextColor(RED);
-      M5.Lcd.println("    No SD Available");
-      M5.Lcd.setTextColor(GREEN);
-      M5.Lcd.setTextSize(2);
-      M5.Lcd.setCursor(0, 220);
-      M5.Lcd.println("    Press C for menu");
-    }
-    else
-    {
-      M5.Lcd.fillScreen(BLACK);
-      M5.Lcd.setCursor(0, 100);
-      M5.Lcd.setTextSize(2);
-      M5.Lcd.setTextColor(RED);
-      M5.Lcd.println("    Not found on SD");
-      M5.Lcd.setTextColor(GREEN);
-      M5.Lcd.setTextSize(2);
-      M5.Lcd.setCursor(0, 220);
-      M5.Lcd.println("    Press C for menu");
-      while (buttonC == false)
-      {
-        if (M5.BtnC.wasReleased())
-        {
-          buttonC = true;
-        }
-        M5.update();
-      }
-      buttonC = false;
-    }
+    buttonC = false;
+  }
 }
 
 //========================================================================
@@ -417,7 +418,7 @@ void exportMaster()
     }
     buttonC = false;
     sdCommand = "";
-    }
+  }
   else
   {
     M5.Lcd.fillScreen(BLACK);
@@ -429,35 +430,35 @@ void exportMaster()
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(0, 220);
     M5.Lcd.println("    Press C for menu");
-  }  
+  }
 }
 
 //========================================================================
 
 void showSeed()
 {
-    M5.Lcd.fillScreen(BLACK);
-    M5.Lcd.setCursor(0, 20);
-    M5.Lcd.setTextSize(3);
-    M5.Lcd.setTextColor(GREEN);
-    M5.Lcd.println("    SHOW SEED");
-    M5.Lcd.println("");
-    M5.Lcd.setTextColor(BLUE);
-    M5.Lcd.setTextSize(2);
-    M5.Lcd.println(savedSeed);
-    M5.Lcd.setTextColor(GREEN);
-    M5.Lcd.setTextSize(2);
-    M5.Lcd.setCursor(0, 220);
-    M5.Lcd.println("     Press C for menu");
-    while (buttonC == false)
+  M5.Lcd.fillScreen(BLACK);
+  M5.Lcd.setCursor(0, 20);
+  M5.Lcd.setTextSize(3);
+  M5.Lcd.setTextColor(GREEN);
+  M5.Lcd.println("    SHOW SEED");
+  M5.Lcd.println("");
+  M5.Lcd.setTextColor(BLUE);
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.println(savedSeed);
+  M5.Lcd.setTextColor(GREEN);
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.setCursor(0, 220);
+  M5.Lcd.println("     Press C for menu");
+  while (buttonC == false)
+  {
+    if (M5.BtnC.wasReleased())
     {
-      if (M5.BtnC.wasReleased())
-      {
-        buttonC = true;
-      }
-      M5.update();
+      buttonC = true;
     }
-    buttonC = false;
+    M5.update();
+  }
+  buttonC = false;
 }
 
 //========================================================================
@@ -467,7 +468,7 @@ void wipeDevice()
   M5.Lcd.fillScreen(BLACK);
   M5.Lcd.setCursor(0, 20);
   M5.Lcd.setTextSize(3);
-  M5.Lcd.setTextColor(GREEN); 
+  M5.Lcd.setTextColor(GREEN);
   M5.Lcd.println("RESET/WIPE DEVICE");
   M5.Lcd.setCursor(0, 90);
   M5.Lcd.setTextColor(RED);
@@ -483,22 +484,22 @@ void wipeDevice()
     if (M5.BtnA.wasReleased())
     {
       buttonA = true;
-      }
-      if (M5.BtnC.wasReleased())
-      {
-        buttonC = true;
-      }
-      M5.update();
     }
-    if (buttonA == true)
+    if (M5.BtnC.wasReleased())
     {
-      wipeSpiffs();
-      seedMaker();
-      pinMaker();
+      buttonC = true;
     }
+    M5.update();
+  }
+  if (buttonA == true)
+  {
+    wipeSpiffs();
+    seedMaker();
+    pinMaker();
+  }
 
-    buttonA = false;
-    buttonC = false;
+  buttonA = false;
+  buttonC = false;
 }
 
 //========================================================================
@@ -570,40 +571,47 @@ void seedMaker()
   Serial.println(hashedNum[0]);
   Serial.println(hashedNum[1]);
   String binNum;
-  for (int i = 0; i <= 1; i++) {
+  for (int i = 0; i <= 1; i++)
+  {
     int tempNum;
-    if(hashedNum[i] == 'a'){
+    if (hashedNum[i] == 'a')
+    {
       tempNum = 10;
     }
-    else if(hashedNum[i] == 'b'){
+    else if (hashedNum[i] == 'b')
+    {
       tempNum = 11;
     }
-    else if(hashedNum[i] == 'c'){
+    else if (hashedNum[i] == 'c')
+    {
       tempNum = 12;
     }
-    else if(hashedNum[i] == 'd'){
+    else if (hashedNum[i] == 'd')
+    {
       tempNum = 13;
     }
-    else if(hashedNum[i] == 'e'){
+    else if (hashedNum[i] == 'e')
+    {
       tempNum = 14;
     }
-    else if(hashedNum[i] == 'f'){
+    else if (hashedNum[i] == 'f')
+    {
       tempNum = 15;
     }
-    else{
+    else
+    {
       tempNum = String(hashedNum[i]).toInt();
     }
     Serial.println("dfgvasdf");
     Serial.println(tempNum);
     Serial.println("dasfgsdfg");
     binNum = String(binNum) + String(decimalToBinary(tempNum));
-    
   }
   Serial.println(binNum);
   Serial.println(binaryToDecimal(binNum.toInt()));
   Serial.println(seedWords[binaryToDecimal(binNum.toInt())]);
   seedGenerateStr += seedWords[binaryToDecimal(binNum.toInt())];
-  
+
   for (int z = 0; z < 24; z++)
   {
     M5.Lcd.fillScreen(BLACK);
@@ -677,7 +685,7 @@ void seedMaker()
   File otherFile = SPIFFS.open("/key.txt");
   savedSeed = otherFile.readStringUntil('\n');
   otherFile.close();
-  
+
   writeFile(SD, "/bowser.txt", char_array);
 
   delay(6000);
@@ -687,25 +695,26 @@ void seedMaker()
 
 String decimalToBinary(int num)
 {
-  uint8_t bitsCount = sizeof( num ) * 8;
-  char str[ bitsCount + 1 ];
-  itoa( num, str, 2 );
+  uint8_t bitsCount = sizeof(num) * 8;
+  char str[bitsCount + 1];
+  itoa(num, str, 2);
 
   return str;
 }
 
 int binaryToDecimal(int num)
 {
-    int dec_value = 0;
-    int base = 1;
-    int temp = num;
-    while (temp) {
-        int last_digit = temp % 10;
-        temp = temp / 10;
-        dec_value += last_digit * base;
-        base = base * 2;
-    }
-    return dec_value;
+  int dec_value = 0;
+  int base = 1;
+  int temp = num;
+  while (temp)
+  {
+    int last_digit = temp % 10;
+    temp = temp / 10;
+    dec_value += last_digit * base;
+    base = base * 2;
+  }
+  return dec_value;
 }
 
 //========================================================================
