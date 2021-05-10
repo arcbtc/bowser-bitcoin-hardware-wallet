@@ -40,8 +40,6 @@ void setup(void)
 {
   Serial.begin(115200);
   M5.begin();
-  //Get randomness from hardware noise
-  randomSeed(esp_random());
   M5.Lcd.setBrightness(100);
   M5.Lcd.fillScreen(BLACK);
   decoySetup();
@@ -232,7 +230,7 @@ void displayAddress()
   M5.Lcd.setTextColor(GREEN);
   M5.Lcd.println("      ADDRESS");
   String freshPub = hd.derive(path).address();
-  M5.Lcd.qrcode(freshPub, 5, 46, 160);
+  M5.Lcd.qrcode(freshPub, 5, 46, 160, 3);
   M5.Lcd.setTextSize(2);
   int i = 0;
   while (i < freshPub.length() + 1)
@@ -287,14 +285,24 @@ void signPSBT()
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setCursor(0, 20);
     M5.Lcd.setTextSize(2);
+
     int len_parsed = tx.parse(eltx);
     if (len_parsed == 0)
     {
       M5.Lcd.println("Can't parse tx");
       return;
     }
-    M5.Lcd.println("Unsigned tx");
-    M5.Lcd.println(tx);
+    for (int i = 0; i < tx.tx.outputsNumber; i++)
+    {
+      M5.Lcd.print(tx.tx.txOuts[i].address());
+      M5.Lcd.print("\n-> ");
+      // Serial can't print uint64_t, so convert to int
+      M5.Lcd.print(int(tx.tx.txOuts[i].amount));
+      M5.Lcd.println(" sat\n");
+    }
+    M5.Lcd.print("Fee: ");
+    M5.Lcd.print(int(tx.fee()));
+    M5.Lcd.println(" sat");
     M5.Lcd.setCursor(0, 220);
     M5.Lcd.println("A to sign, C to cancel");
     while (buttonA == false && buttonC == false)
@@ -317,13 +325,11 @@ void signPSBT()
     buttonA = false;
     HDPrivateKey hd(savedSeed, passKey);
     HDPrivateKey account = hd.derive("m/84'/0'/0'/");
-    Serial.println(account);
     tx.sign(account);
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setCursor(0, 20);
     M5.Lcd.setTextSize(2);
     String signedTx = tx;
-    Serial.print(signedTx);
     int str_len = signedTx.length() + 1;
     char char_array[str_len];
     signedTx.toCharArray(char_array, str_len);
@@ -551,66 +557,12 @@ void seedMaker()
   delay(6000);
   buttonA = false;
 
-  String bigNum;
-  //Get first 23 words
-  for (int z = 0; z < 23; z++)
+  byte arr[32];
+  for (int i = 0; i < sizeof(arr); i++)
   {
-    int randomNumber = random(0, 2047);
-    Serial.println(randomNumber);
-    bigNum = bigNum + decimalToBinary(randomNumber);
-    seedGenerateStr += seedWords[randomNumber] + " ";
+    arr[i] = esp_random() % 256;
   }
-  //Calculate the last word
-  String checkSum = String(random(0, 1)) + String(random(0, 1)) + String(random(0, 1));
-  bigNum = bigNum + checkSum;
-  uint8_t newBigNumResult[64];
-  sha256(String(bigNum.toInt()), newBigNumResult);
-  String hashedNum = toHex(newBigNumResult, 64);
-  Serial.println(bigNum);
-  Serial.println(hashedNum);
-  Serial.println(hashedNum[0]);
-  Serial.println(hashedNum[1]);
-  String binNum;
-  for (int i = 0; i <= 1; i++)
-  {
-    int tempNum;
-    if (hashedNum[i] == 'a')
-    {
-      tempNum = 10;
-    }
-    else if (hashedNum[i] == 'b')
-    {
-      tempNum = 11;
-    }
-    else if (hashedNum[i] == 'c')
-    {
-      tempNum = 12;
-    }
-    else if (hashedNum[i] == 'd')
-    {
-      tempNum = 13;
-    }
-    else if (hashedNum[i] == 'e')
-    {
-      tempNum = 14;
-    }
-    else if (hashedNum[i] == 'f')
-    {
-      tempNum = 15;
-    }
-    else
-    {
-      tempNum = String(hashedNum[i]).toInt();
-    }
-    Serial.println("dfgvasdf");
-    Serial.println(tempNum);
-    Serial.println("dasfgsdfg");
-    binNum = String(binNum) + String(decimalToBinary(tempNum));
-  }
-  Serial.println(binNum);
-  Serial.println(binaryToDecimal(binNum.toInt()));
-  Serial.println(seedWords[binaryToDecimal(binNum.toInt())]);
-  seedGenerateStr += seedWords[binaryToDecimal(binNum.toInt())];
+  seedGenerateStr = mnemonicFromEntropy(arr, sizeof(arr));
 
   for (int z = 0; z < 24; z++)
   {
@@ -674,7 +626,7 @@ void seedMaker()
   M5.Lcd.println("   be saved to SD");
 
   File file = SPIFFS.open("/key.txt", FILE_WRITE);
-  file.print(seedGenerateStr.substring(0, seedGenerateStr.length() - 1) + "\n");
+  file.print(seedGenerateStr.substring(0, seedGenerateStr.length()) + "\n");
   file.close();
 
   String seedGen = "Keep you seed phrase safe but dont lose them! \n" + seedGenerateStr + "\n To learn more about seed phrases visit https://en.bitcoin.it/wiki/Seed_phrase";
@@ -689,32 +641,6 @@ void seedMaker()
   writeFile(SD, "/bowser.txt", char_array);
 
   delay(6000);
-}
-
-//========================================================================
-
-String decimalToBinary(int num)
-{
-  uint8_t bitsCount = sizeof(num) * 8;
-  char str[bitsCount + 1];
-  itoa(num, str, 2);
-
-  return str;
-}
-
-int binaryToDecimal(int num)
-{
-  int dec_value = 0;
-  int base = 1;
-  int temp = num;
-  while (temp)
-  {
-    int last_digit = temp % 10;
-    temp = temp / 10;
-    dec_value += last_digit * base;
-    base = base * 2;
-  }
-  return dec_value;
 }
 
 //========================================================================
@@ -740,9 +666,14 @@ void enterPin(bool set)
   morseLetter = "";
   M5.Lcd.fillScreen(BLACK);
   M5.Lcd.setTextColor(GREEN);
-  M5.Lcd.setCursor(0, 100);
+  M5.Lcd.setCursor(0, 10);
   M5.Lcd.setTextSize(3);
-  M5.Lcd.print("    Enter pin");
+  M5.Lcd.print(" Morse Code pin");
+  M5.Lcd.setCursor(0, 200);
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.println(" A dot, B dash, C submit");
+  M5.Lcd.println(" pause between values");
+
   confirm = false;
   while (confirm == false)
   {
@@ -779,8 +710,6 @@ void enterPin(bool set)
       uint8_t passKeyResult[32];
       sha256(passKey, passKeyResult);
       hashed = toHex(passKeyResult, 32);
-      Serial.println(savedPinHash);
-      Serial.println(hashed);
 
       if (savedPinHash == hashed || set == true)
       {
@@ -813,7 +742,9 @@ void enterPin(bool set)
             passKey += ref[1][z];
             passHide += "* ";
             M5.Lcd.fillScreen(BLACK);
+            M5.Lcd.setCursor(0, 10);
             M5.Lcd.setTextSize(3);
+            M5.Lcd.print(" Morse Code pin");
             M5.Lcd.setCursor(0, 90);
             M5.Lcd.setTextColor(GREEN);
             if (set == true)
@@ -824,6 +755,10 @@ void enterPin(bool set)
             {
               M5.Lcd.print("   " + passHide);
             }
+            M5.Lcd.setCursor(0, 200);
+            M5.Lcd.setTextSize(2);
+            M5.Lcd.println(" A dot, B dash, C submit");
+            M5.Lcd.println(" pause between values");
           }
         }
         buttonA = false;
@@ -940,7 +875,6 @@ void getKeys(String mnemonic, String password)
 
   if (!hd)
   { // check if it is valid
-    Serial.println("   Invalid xpub");
     return;
   }
 
@@ -958,7 +892,6 @@ void readFile(fs::FS &fs, const char *path)
   File file = fs.open(path);
   if (!file)
   {
-    Serial.println("   Failed to open file for reading");
     sdAvailable = false;
     return;
   }
@@ -977,7 +910,6 @@ void writeFile(fs::FS &fs, const char *path, const char *message)
   File file = fs.open(path, FILE_WRITE);
   if (!file)
   {
-
     M5.Lcd.println("   Failed to open file for writing");
     return;
   }
