@@ -16,7 +16,7 @@ Project is out of beta and ready for use, but use at your own risk.
 
 ## Latest version
 
-https://github.com/arcbtc/bowser-bitcoin-hardware-wallet/releases/tag/v0.01
+https://github.com/arcbtc/bowser-bitcoin-hardware-wallet/releases/tag/v1
 
 ## Tutorial
 
