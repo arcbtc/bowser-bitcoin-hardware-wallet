@@ -52,23 +52,29 @@ void setup(void)
   savedSeed = otherFile.readStringUntil('\n');
   otherFile.close();
   bool sdSwitch = false;
-  Serial.println("poo");
   while (!sdSwitch) {
-    Serial.println("poo");
     sdChecker();
-    if (!sdAvailable && savedSeed.length() < 30)
+    if (savedSeed.length() < 30)
+     {
+      M5.Lcd.fillScreen(BLACK);
+      M5.Lcd.setCursor(0, 100);
+      M5.Lcd.setTextSize(2);
+      M5.Lcd.setTextColor(RED);
+      M5.Lcd.println(" ERROR: No wallet found on device");
+      
+     }
+    else if (!sdAvailable)
      {
       M5.Lcd.fillScreen(BLACK);
       M5.Lcd.setCursor(0, 100);
       M5.Lcd.setTextSize(2);
       M5.Lcd.setTextColor(RED);
       M5.Lcd.println(" ERROR: No SD available");
-      M5.Lcd.println("/No wallet found on device");
-      
      }
     else{
        sdSwitch = true;
    }
+   Serial.println(sdCommand);
    delay(3000);
   }
   if (sdCommand == "HARD RESET")
