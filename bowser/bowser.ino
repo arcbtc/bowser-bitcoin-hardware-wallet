@@ -38,12 +38,11 @@ char ref[2][36][7] = {
 //========================================================================
 void setup(void)
 {
-  Serial.begin(115200);
   M5.begin();
-  M5.Lcd.setBrightness(100);
+  delay(200);
+  M5.Lcd.setBrightness(50);
   M5.Lcd.fillScreen(BLACK);
   decoySetup();
-  M5.Lcd.setBrightness(100);
   if (!SPIFFS.begin(true))
   {
     return;
@@ -52,18 +51,27 @@ void setup(void)
   File otherFile = SPIFFS.open("/key.txt");
   savedSeed = otherFile.readStringUntil('\n');
   otherFile.close();
-  sdChecker();
-  if (!sdAvailable && savedSeed.length() < 30)
-  {
-    M5.Lcd.fillScreen(BLACK);
-    M5.Lcd.setCursor(0, 100);
-    M5.Lcd.setTextSize(2);
-    M5.Lcd.setTextColor(RED);
-    M5.Lcd.println(" ERROR: No SD available");
-    M5.Lcd.println("/No wallet found on device");
-    delay(999999999);
+  bool sdSwitch = false;
+  Serial.println("poo");
+  while (!sdSwitch) {
+    Serial.println("poo");
+    sdChecker();
+    if (!sdAvailable && savedSeed.length() < 30)
+     {
+      M5.Lcd.fillScreen(BLACK);
+      M5.Lcd.setCursor(0, 100);
+      M5.Lcd.setTextSize(2);
+      M5.Lcd.setTextColor(RED);
+      M5.Lcd.println(" ERROR: No SD available");
+      M5.Lcd.println("/No wallet found on device");
+      
+     }
+    else{
+       sdSwitch = true;
+   }
+   delay(3000);
   }
-  else if (sdCommand == "HARD RESET")
+  if (sdCommand == "HARD RESET")
   {
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setCursor(0, 20);
