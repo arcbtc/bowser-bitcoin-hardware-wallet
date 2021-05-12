@@ -49,6 +49,8 @@ https://www.arduino.cc/en/Guide/HomePage
 Install ESP32 Boards
 https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md
 
+**In "Board Manager" select M5Stack-Core2**
+
 ## Libraries Used
 
 - <a href="https://github.com/micro-bitcoin/uBitcoin">uBitcoin</a> (Download library from github and "Add Zip Library" in Arduino Library Manager...Tested with v1.0.2)
