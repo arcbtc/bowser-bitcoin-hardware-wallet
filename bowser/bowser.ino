@@ -65,6 +65,14 @@ void setup(void)
   }
   else if (sdCommand == "HARD RESET")
   {
+    M5.Lcd.fillScreen(BLACK);
+    M5.Lcd.setCursor(0, 20);
+    M5.Lcd.setTextSize(3);
+    M5.Lcd.setTextColor(RED);
+    M5.Lcd.println("");
+    M5.Lcd.setCursor(0, 90);
+    M5.Lcd.println("    PROCESSING");
+    delay(1000);
     wipeSpiffs();
     seedMaker();
     pinMaker();
@@ -559,7 +567,7 @@ void seedMaker()
 
   byte arr[32];
   for (int i = 0; i < sizeof(arr); i++)
-  {
+  { 
     arr[i] = esp_random() % 256;
   }
   seedGenerateStr = mnemonicFromEntropy(arr, sizeof(arr));
