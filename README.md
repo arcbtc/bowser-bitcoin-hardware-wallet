@@ -14,8 +14,8 @@ For use with Electrum Wallet 3.3.8 https://download.electrum.org/3.3.8/
 
 ## Disclaimer
 
-Project is out of beta and ready for use, but use at your own risk.
-Bowser wallet is like a cold storage paper wallet, if someone gets the device they could take your funds, the wallet details are NOT secure on the device.
+Project is out of beta and ready for use, but use at your own risk.<br/>
+Bowser wallet is like a cold storage paper wallet, if someone gets the device they could take your funds, the wallet details are NOT secure on the device.<br/>
 The risk/use profile of bowser is storing in a secure location as you would with a paper wallet, but with the option to sign transactions via PSBTs.
 
 ## Latest version
