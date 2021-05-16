@@ -12,7 +12,7 @@ Building hardware wallets not only gives greater autonomy/liberty, it is an exce
 
 For use with Electrum Wallet 3.3.8 https://download.electrum.org/3.3.8/ 
 
-## Disclaimer
+## Disclaimer/risk-profile
 
 Project is out of beta and ready for use, but use at your own risk.
 Bowser wallet is like a cold storage paper wallet, if someone gets the device they could take the funds, the wallet details are NOT secure on the device.
