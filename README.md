@@ -15,7 +15,7 @@ For use with Electrum Wallet 3.3.8 https://download.electrum.org/3.3.8/
 ## Disclaimer/risk-profile
 
 Project is out of beta and ready for use, but use at your own risk.
-Its best to think of Bowser wallet like a cold storage paper wallet that can sign transactions. Some security is achieved by the passphrase being stored/verified as a hash, however the mnemonic is stored in an accessible location on the device and the passphrase could be brute forced, so the wallet details are only pseudo-secure on the device.
+Its best to think of Bowser wallet like a cold storage paper wallet that can sign transactions. Some security is achieved by the passphrase being stored/verified as a hash, however the mnemonic is stored in a removable location on the device and the passphrase could be brute forced, so the wallet details are only pseudo-secure on the device.
 The risk/use profile of Bowser is storing in a secure location as you would with a paper wallet, the benefit of Bowser is it gives the option to sign transactions via PSBTs on an offline, dedicated device.
 
 ## Latest version
