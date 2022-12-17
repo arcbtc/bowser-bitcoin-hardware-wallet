@@ -1,3 +1,6 @@
+  
+<h1><a href="https://github.com/lnbits/hardware-wallet"> ARCHIVED< PLEASE SEE UPDATED VERSION HERE!!! </a></h1>
+  
   <p align="center">
 <img src="https://i.imgur.com/PJXob0B.png" />
 </p>
